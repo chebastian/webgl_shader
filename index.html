@@ -1,0 +1,85 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type ="text/javascript" src="js/sylvester.js" ></script>
+        <script type ="text/javascript" src="js/glUtils.js" ></script>
+        <script type ="text/javascript" src="js/threed.js" ></script>
+        <script type ="text/javascript" src="js/script.js" ></script>
+        <link rel ="stylesheet" type= "text/css" href="style.css"/>
+       <script id="shader-fs" type="x-shader/x-fragment">
+      varying highp vec2 vTextureCoord;
+      varying highp vec3 vLighting;
+      varying highp vec3 vNormal;
+      varying highp vec3 vVertNorm;
+      varying highp vec3 vWorldPos;
+
+      uniform sampler2D uSampler;
+      
+      void main(void) {
+        highp vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        highp vec4 col = texelColor;
+        //col.rgb = texelColor.rgb * 0.2;
+        highp float d = max(vWorldPos.y,1.0);
+        gl_FragColor = vec4(col.rgb  * (vLighting*d), vWorldPos.z);
+      }
+    </script>
+    
+    <!-- Vertex shader program -->
+    
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute highp vec3 aVertexNormal;
+      attribute highp vec3 aVertexPosition;
+      attribute highp vec2 aTextureCoord;
+      attribute highp vec3 aColor;
+    
+      uniform highp mat4 uNormalMatrix;
+      uniform highp mat4 uMVMatrix;
+      uniform highp mat4 uPMatrix;
+      uniform highp vec3 uTest;
+      uniform highp float uDisplace;
+      
+      varying highp vec3 vEye;
+      varying highp vec2 vTextureCoord;
+      varying highp vec3 vLighting;
+      varying highp vec3 vVertNorm;
+      varying highp vec3 vWorldPos;
+
+      void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+        
+        // Apply lighting effect
+        vWorldPos = vec3(gl_Position);
+        highp vec3 ambientLight = vec3(0.6*uTest.x, 0.2*uTest.x, 0.2*uTest.x);
+        highp vec3 directionalLightColor = vec3(0.5, 0.7, 0.2);
+        highp vec3 directionalVector = vec3(-1, 1.5, 0.5);
+        
+        highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+        vVertNorm.xyz = transformedNormal.xyz;
+        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.25);
+        vLighting = ambientLight + (directionalLightColor * directional);
+      }
+    </script>
+
+    </head>
+    <body onload="start()">
+        <canvas id="mainCanvas" width="800" height="600"></canvas>
+        <div id="valuePanel">
+        <form oninput="totContrast.value = parseInt(contrast.value)">
+            <br>SPEED<br>
+            <input type="range" id="contrast" value="50" max="100" ondrag="test">
+            <br>COLOR<br>
+            <input type="range" id="color" value="50" max="100" ondrag="test">
+            <br>DISPLACEMENT<br>
+            <input type="range" id="disp" value="50" max="100" ondrag="test">
+            <output id="tot" name="totContrast" for=" x"></output>%
+        </form>
+        </div>
+    </body>
+</html>
